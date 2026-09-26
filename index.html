@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unic Code Generator</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    color: #fff;
+    padding: 20px;
+  }
+  .card {
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 36px 30px;
+    width: 100%;
+    max-width: 460px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    text-align: center;
+  }
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    background: linear-gradient(90deg, #00c6ff, #a855f7, #ff6ec7);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .sub {
+    font-size: 12px;
+    color: #9aa0b5;
+    margin-bottom: 22px;
+  }
+  .output {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 18px;
+  }
+  #code {
+    flex: 1;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #00e5ff;
+    word-break: break-all;
+    text-align: left;
+    user-select: all;
+  }
+  .copy-btn {
+    background: rgba(255,255,255,0.1);
+    border: none;
+    color: #fff;
+    width: 38px;
+    height: 38px;
+    border-radius: 9px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: 0.2s;
+    flex-shrink: 0;
+  }
+  .copy-btn:hover { background: rgba(0,198,255,0.35); }
+  .copy-btn:active { transform: scale(0.92); }
+
+  .options {
+    text-align: left;
+    margin-bottom: 20px;
+  }
+  .opt-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 4px;
+    font-size: 14px;
+    color: #cbd0e0;
+  }
+  .opt-row input[type="checkbox"] {
+    width: 18px; height: 18px;
+    accent-color: #00c6ff;
+    cursor: pointer;
+  }
+  .len-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.15);
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: linear-gradient(135deg,#00c6ff,#a855f7);
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(0,198,255,0.7);
+  }
+  #lenVal {
+    font-family: monospace;
+    font-weight: bold;
+    color: #00e5ff;
+    min-width: 34px;
+    text-align: right;
+  }
+
+  .gen-btn {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    color: #fff;
+    background: linear-gradient(90deg, #00c6ff, #a855f7, #ff6ec7);
+    background-size: 200% 100%;
+    transition: 0.35s;
+    margin-bottom: 12px;
+  }
+  .gen-btn:hover {
+    background-position: 100% 0;
+    box-shadow: 0 8px 25px rgba(168,85,247,0.45);
+  }
+  .gen-btn:active { transform: scale(0.98); }
+
+  .history-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #7c8299;
+    margin: 16px 0 8px;
+    text-align: left;
+  }
+  #history {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    min-height: 10px;
+  }
+  .hist-item {
+    font-family: monospace;
+    font-size: 12px;
+    padding: 5px 10px;
+    border-radius: 7px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #b9c0d4;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .hist-item:hover {
+    background: rgba(0,198,255,0.2);
+    color: #fff;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: linear-gradient(90deg,#00c6ff,#a855f7);
+    color: #fff;
+    padding: 11px 22px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0;
+    transition: 0.3s;
+    pointer-events: none;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>UNIC CODE GENERATOR</h1>
+    <p class="sub">Huruf besar • huruf kecil • angka</p>
+
+    <div class="output">
+      <span id="code">—</span>
+      <button class="copy-btn" id="copyBtn" title="Copy">📋</button>
+    </div>
+
+    <div class="options">
+      <div class="opt-row">
+        <span>Huruf Besar (A-Z)</span>
+        <input type="checkbox" id="upper" checked>
+      </div>
+      <div class="opt-row">
+        <span>Huruf Kecil (a-z)</span>
+        <input type="checkbox" id="lower" checked>
+      </div>
+      <div class="opt-row">
+        <span>Angka (0-9)</span>
+        <input type="checkbox" id="number" checked>
+      </div>
+      <div class="opt-row">
+        <span>Panjang Kode</span>
+        <div class="len-control" style="flex:1; margin-left:16px; max-width:170px;">
+          <input type="range" id="len" min="4" max="24" value="9">
+          <span id="lenVal">9</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="gen-btn" id="genBtn">⚡ GENERATE CODE</button>
+
+    <div class="history-title">Riwayat</div>
+    <div id="history"></div>
+  </div>
+
+  <div class="toast" id="toast">Copied!</div>
+
+<script>
+  const UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const LOWER = "abcdefghijklmnopqrstuvwxyz";
+  const NUMBER = "0123456789";
+
+  const codeEl   = document.getElementById('code');
+  const upperCb  = document.getElementById('upper');
+  const lowerCb  = document.getElementById('lower');
+  const numberCb = document.getElementById('number');
+  const lenInput = document.getElementById('len');
+  const lenVal   = document.getElementById('lenVal');
+  const genBtn   = document.getElementById('genBtn');
+  const copyBtn  = document.getElementById('copyBtn');
+  const historyEl= document.getElementById('history');
+  const toast    = document.getElementById('toast');
+
+  let currentCode = "";
+
+  // Update label panjang
+  lenInput.addEventListener('input', () => {
+    lenVal.textContent = lenInput.value;
+  });
+
+  // Fungsi acak pakai crypto (lebih random dari Math.random)
+  function randomInt(max) {
+    if (window.crypto && window.crypto.getRandomValues) {
+      const arr = new Uint32Array(1);
+      window.crypto.getRandomValues(arr);
+      return arr[0] % max;
+    }
+    return Math.floor(Math.random() * max);
+  }
+
+  function generate() {
+    let pool = "";
+    if (upperCb.checked)  pool += UPPER;
+    if (lowerCb.checked)  pool += LOWER;
+    if (numberCb.checked) pool += NUMBER;
+
+    if (pool.length === 0) {
+      codeEl.textContent = "Pilih minimal 1 opsi!";
+      codeEl.style.color = "#ff6b6b";
+      return;
+    }
+    codeEl.style.color = "#00e5ff";
+
+    const len = parseInt(lenInput.value);
+    let result = "";
+    for (let i = 0; i < len; i++) {
+      result += pool[randomInt(pool.length)];
+    }
+
+    currentCode = result;
+    codeEl.textContent = result;
+    addHistory(result);
+  }
+
+  function addHistory(code) {
+    // Hindari duplikat beruntun
+    if (historyEl.firstChild && historyEl.firstChild.textContent === code) return;
+
+    const span = document.createElement('span');
+    span.className = 'hist-item';
+    span.textContent = code;
+    span.title = 'Klik untuk pakai';
+    span.addEventListener('click', () => {
+      currentCode = code;
+      codeEl.textContent = code;
+      codeEl.style.color = "#00e5ff";
+    });
+
+    historyEl.prepend(span);
+    // Batasi 8 riwayat
+    while (historyEl.children.length > 8) {
+      historyEl.removeChild(historyEl.lastChild);
+    }
+  }
+
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => toast.classList.remove('show'), 1400);
+  }
+
+  function copyCode() {
+    if (!currentCode) return;
+    navigator.clipboard.writeText(currentCode).then(() => {
+      showToast("✓ Code dicopy!");
+    }).catch(() => {
+      // fallback
+      const ta = document.createElement('textarea');
+      ta.value = currentCode;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast("✓ Code dicopy!");
+    });
+  }
+
+  genBtn.addEventListener('click', generate);
+  copyBtn.addEventListener('click', copyCode);
+
+  // Generate pertama kali saat load
+  generate();
+
+  // Spasi = generate ulang (kalo gak lagi fokus di checkbox)
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && e.target.tagName !== 'INPUT') {
+      e.preventDefault();
+      generate();
+    }
+  });
+</script>
+</body>
+</html>
